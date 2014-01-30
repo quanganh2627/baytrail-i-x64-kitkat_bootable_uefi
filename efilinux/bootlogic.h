@@ -98,8 +98,10 @@ enum targets {
 	TARGET_FASTBOOT = 0x0E,
 	TARGET_TEST,
 	TARGET_COLD_OFF,
-	TARGET_DNX,
+	TARGET_FACTORY	= 0x12,
+	TARGET_DNX	= 0x14,
 	TARGET_UNKNOWN,
+	TARGET_FACTORY2	= 0x18,
 	TARGET_ERROR	= -1,
 };
 extern char *target_strings[];
