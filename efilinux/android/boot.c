@@ -745,6 +745,7 @@ EFI_STATUS android_image_start_buffer(
         EFI_STATUS ret;
         aosp_header = (struct boot_img_hdr *)bootimage;
         buf = (struct boot_params *)(bootimage + aosp_header->page_size);
+        BOOLEAN watchdog_en = TRUE;
 
         /* Check boot sector signature */
         if (buf->hdr.boot_flag != 0xAA55) {
@@ -786,9 +787,11 @@ EFI_STATUS android_image_start_buffer(
                 goto out_cmdline;
         }
 
+        if (buf->hdr.cmd_line_ptr)
+                watchdog_en = strstr((CHAR8 *)buf->hdr.cmd_line_ptr, "disable_kernel_watchdog=1") ? FALSE : TRUE;
+
         debug(L"Loading the kernel\n");
-        ret = handover_kernel(bootimage, parent_image,
-               strstr(cmdline, "disable_kernel_watchdog=1") ? FALSE : TRUE);
+        ret = handover_kernel(bootimage, parent_image, watchdog_en);
         error(L"handover_kernel %r", ret);
 
         efree(buf->hdr.ramdisk_image, buf->hdr.ramdisk_size);

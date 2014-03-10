@@ -37,17 +37,6 @@
 #include "utils.h"
 #include "uefi_osnib.h"
 
-#define STRINGIZE(x) #x
-char *target_strings[TARGET_UNKNOWN + 1] = {
-	STRINGIZE(TARGET_BOOT),
-	STRINGIZE(TARGET_RECOVERY),
-	STRINGIZE(TARGET_FASTBOOT),
-	STRINGIZE(TARGET_TEST),
-	STRINGIZE(TARGET_COLD_OFF),
-	STRINGIZE(TARGET_CHARGING),
-	STRINGIZE(TARGET_UNKNOWN),
-};
-
 static enum targets boot_bcb(int dummy)
 {
 	return loader_ops.load_bcb();
@@ -377,8 +366,6 @@ EFI_STATUS start_boot_logic(CHAR8 *cmdline)
 	ret = loader_ops.save_target_mode(target);
 	if (EFI_ERROR(ret))
 		warning(L"Failed to save the target_mode: %r\n", ret);
-
-	debug(L"Booting target %a\n", target_strings[target]);
 
 #ifdef RUNTIME_SETTINGS
 	updated_cmdline = get_cmdline(cmdline);
