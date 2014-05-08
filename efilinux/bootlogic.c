@@ -58,22 +58,7 @@ void forced_shutdown(void)
 
 enum targets boot_fastboot_combo(enum wake_sources ws)
 {
-	if (!loader_ops.combo_key(COMBO_FASTBOOT_MODE))
-		return TARGET_UNKNOWN;
-
-	switch(loader_ops.em_ops->get_battery_level()) {
-	case BATT_ERROR:
-		error(L"Failed to get battery level. Booting.\n");
-	case BATT_BOOT_OS:
-		return TARGET_FASTBOOT;
-	case BATT_BOOT_CHARGING:
-		return loader_ops.em_ops->is_charger_present() ?
-			TARGET_FASTBOOT : TARGET_COLD_OFF;
-	case BATT_LOW:
-		return TARGET_COLD_OFF;
-	}
-
-	return TARGET_UNKNOWN;
+	return loader_ops.combo_key(COMBO_FASTBOOT_MODE) ? TARGET_FASTBOOT : TARGET_UNKNOWN;
 }
 
 enum targets boot_power_key(enum wake_sources ws)
