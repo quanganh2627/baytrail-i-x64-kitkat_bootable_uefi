@@ -63,22 +63,7 @@ enum targets boot_fastboot_combo(enum wake_sources ws)
 
 enum targets boot_power_key(enum wake_sources ws)
 {
-	if (ws != WAKE_POWER_BUTTON_PRESSED)
-		return TARGET_UNKNOWN;
-
-	switch(loader_ops.em_ops->get_battery_level()) {
-	case BATT_ERROR:
-		error(L"Failed to get battery level. Booting\n");
-	case BATT_BOOT_OS:
-		return TARGET_BOOT;
-	case BATT_BOOT_CHARGING:
-		return loader_ops.em_ops->is_charger_present() ?
-			TARGET_CHARGING : TARGET_COLD_OFF;
-	case BATT_LOW:
-		return TARGET_COLD_OFF;
-	}
-
-	return TARGET_UNKNOWN;
+	return ws == WAKE_POWER_BUTTON_PRESSED ? TARGET_BOOT : TARGET_UNKNOWN;
 }
 
 enum targets boot_rtc(enum wake_sources ws)
@@ -329,6 +314,27 @@ EFI_STATUS check_target(enum targets target)
 	return EFI_SUCCESS;
 }
 
+enum targets em_fallback_target(enum targets target)
+{
+	enum targets fallback = target;
+
+	if (loader_ops.em_ops->get_battery_level() == BATT_BOOT_CHARGING)
+		switch (target) {
+		case TARGET_BOOT:
+		case TARGET_FACTORY:
+		case TARGET_FACTORY2:
+			if (loader_ops.em_ops->is_charger_present())
+				fallback = TARGET_CHARGING;
+			else
+				fallback = TARGET_COLD_OFF;
+			debug(L"EM fallback from 0x%x to 0x%x\n", target, fallback);
+			break;
+		default:
+		    fallback = target;
+		}
+	return fallback;
+}
+
 static EFI_STATUS launch_or_fallback(enum targets target, CHAR8 *cmdline)
 {
 	EFI_STATUS ret;
@@ -380,6 +386,8 @@ EFI_STATUS start_boot_logic(CHAR8 *cmdline)
 		target = TARGET_BOOT;
 	}
 	debug(L"target = 0x%x\n", target);
+
+	target = em_fallback_target(target);
 
 	if (target == TARGET_COLD_OFF) {
 		debug(L"TARGET_COLD_OFF shutdown\n");
