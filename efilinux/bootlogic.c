@@ -240,14 +240,25 @@ enum targets target_from_inputs(enum flow_types flow_type)
 		return TARGET_COLD_OFF;
 
 	ws = loader_ops.get_wake_source();
+	rs = loader_ops.get_reset_source();
 	debug(L"Wake source = 0x%x\n", ws);
+	debug(L"Reset source = 0x%x\n", rs);
 	if (ws == WAKE_ERROR) {
 		error(L"Wake source couldn't be retrieved. Falling back in TARGET_BOOT\n");
 		return TARGET_BOOT;
 	}
 
+	/* WA for wrong wake source passed by FW,
+	   checking reset source == 6 */
 	if (ws != WAKE_NOT_APPLICABLE)
 		return target_from_off(ws);
+
+	if (ws == WAKE_NOT_APPLICABLE && rs == RESET_SECURITY_INITIATED)
+	{
+		debug(L"WA path taken\n");
+		ws = WAKE_BATTERY_INSERTED;
+		return target_from_off(ws);
+	}
 
 	rs = loader_ops.get_reset_source();
 	debug(L"Reset source = 0x%x\n", rs);
