@@ -279,6 +279,64 @@ enum targets target_from_inputs(enum flow_types flow_type)
 	return target_from_reset(rs);
 }
 
+CHAR8 *wake_string[] = {
+	"wakeup=no_applicable",
+	"wakeup=battery_insertd",
+	"wakeup=usb_inserted",
+	"wakeup=addc_inserted",
+	"wakeup=power_button",
+	"wakeup=rtc_timer",
+	"wakeup=battery_reach_th",
+	"wakeup=Null",
+};
+
+CHAR8 *reset_string[] = {
+	"reset=no_applicable",
+	"reset=os_initialted",
+	"reset=forced",
+	"reset=fw_updated",
+	"reset=kernel_wdt",
+	"reset=security_wdt",
+	"reset=security_initialed",
+	"reset=pmc_wdt",
+	"reset=ec_wdt",
+	"reset=platform_wdt"
+	"reset=Null",
+};
+
+CHAR8 *shutdown_string[] = {
+	"powerdown=no_applicable",
+	"powerdown=button_long",
+	"powerdown=battery_remove",
+	"powerdown=CRIT",
+	"powerdown=thermtrip",
+	"powerdown=pmic_temp",
+	"powerdown=sys_temp",
+	"powerdown=bat_temp",
+	"powerdown=sysuvp",
+	"powerdown=sysovp",
+	"powerdown=security_watchdog",
+	"powerdown=security_intiated",
+	"powerdown=pmc_watchdog",
+	"powerdown=NULL",
+};
+
+CHAR8 *get_powerup_reason(CHAR8 *cmdline)
+{
+	enum wake_sources ws;
+	enum shutdown_sources ss;
+	enum reset_sources rs;
+	ss = loader_ops.get_shutdown_source();
+	ws = loader_ops.get_wake_source();
+	rs = loader_ops.get_reset_source();
+
+	cmdline = append_strings(shutdown_string[ss], cmdline);
+	cmdline = append_strings(wake_string[ws], cmdline);
+	cmdline = append_strings(reset_string[rs], cmdline);
+
+	return cmdline;
+}
+
 CHAR8 *get_extra_cmdline(CHAR8 *cmdline)
 {
 	CHAR8 *extra_cmdline;
@@ -288,7 +346,7 @@ CHAR8 *get_extra_cmdline(CHAR8 *cmdline)
 	debug(L"Getting extra commandline: %a\n", extra_cmdline ? extra_cmdline : (CHAR8 *)"");
 
 	updated_cmdline = append_strings(extra_cmdline, cmdline);
-
+	updated_cmdline = get_powerup_reason(updated_cmdline);
 	if (extra_cmdline)
 		free(extra_cmdline);
 	if (cmdline)
