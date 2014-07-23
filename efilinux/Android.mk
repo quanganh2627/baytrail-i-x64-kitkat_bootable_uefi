@@ -52,6 +52,7 @@ EFILINUX_SRC_FILES := \
 	platform/silvermont.c \
 	platform/airmont.c \
 	platform/x86.c \
+	platform/pmic.c \
 	uefi_keys.c \
 	uefi_boot.c \
 	uefi_utils.c \
