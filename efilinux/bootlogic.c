@@ -346,7 +346,6 @@ CHAR8 *get_extra_cmdline(CHAR8 *cmdline)
 	debug(L"Getting extra commandline: %a\n", extra_cmdline ? extra_cmdline : (CHAR8 *)"");
 
 	updated_cmdline = append_strings(extra_cmdline, cmdline);
-	updated_cmdline = get_powerup_reason(updated_cmdline);
 	if (extra_cmdline)
 		free(extra_cmdline);
 	if (cmdline)
@@ -466,6 +465,7 @@ EFI_STATUS start_boot_logic(CHAR8 *cmdline)
 	loader_ops.display_splash();
 
 	updated_cmdline = check_vbattfreqlmt(cmdline);
+	updated_cmdline = get_powerup_reason(updated_cmdline);
 
 #ifdef RUNTIME_SETTINGS
 	updated_cmdline = get_extra_cmdline(updated_cmdline);
